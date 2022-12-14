@@ -22,6 +22,9 @@ namespace Infrastructure.Middleware
 
         public DbSet<Products> Products { get; set; }
 
+        public DbSet<ProductBrand> productBrand { get; set; }
+        public DbSet<ProductType> productType { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)

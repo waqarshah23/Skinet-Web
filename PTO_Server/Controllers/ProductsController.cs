@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using PTO_Server.Extensions.Logger;
 using Core.Models;
 using PTO_Server.Repository;
+using Infrastructure.Cache;
 
 namespace PTO_Server.Controllers
 {
@@ -62,6 +63,7 @@ namespace PTO_Server.Controllers
             try
             {
                 _logger.LogInfo("getting product by ID");
+                //Products Item = Cache.getItemFromCache<Products>("productbyId", await _getProductByID(id));
                 Products product = await _repository.GetById(id);
                 if(product == null)
                 {
@@ -76,7 +78,11 @@ namespace PTO_Server.Controllers
                 return BadRequest(e);
             }
         }
-
+        private async Task<Products> _getProductByID(int id)
+        {
+            Products item = await _repository.GetById(id);
+            return item;
+        }
         private void _setUserListCache(IEnumerable<Products> pList)
         {
             var cacheEntryOptions = new MemoryCacheEntryOptions()

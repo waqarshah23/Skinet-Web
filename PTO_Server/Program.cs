@@ -5,8 +5,10 @@ using PTO_Server.Extensions.AuthToken;
 using PTO_Server.Extensions.Logger;
 //using PTO_Server.Middleware;
 using Infrastructure.Middleware;
+using Infrastructure.Data;
 using PTO_Server.Repository;
 using PTO_Server.Repository.UserAuth;
+using Core.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -17,6 +19,7 @@ builder.Services.AddMvc();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddSingleton<ILoggerManager, LoggerManager>();
 builder.Services.AddScoped<IUserAuth, UserAuth>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddTransient<ITokenService, TokenService>();
 builder.Services.AddControllers().AddJsonOptions(opt =>
 {
