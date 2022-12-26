@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Infrastructure.Middleware;
+using Core.Specifications;
 
 namespace PTO_Server.Repository
 {
@@ -74,6 +75,23 @@ namespace PTO_Server.Repository
             }
 
             return false ;
+        }
+
+        public async Task<T> GetEntityWithSpec(ISpecification<T> spec)
+        {
+            var result = _applySpecification(spec);
+            return await result.SingleOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<T>> ListWithSpecAsync(ISpecification<T> spec)
+        {
+            var result = _applySpecification(spec);
+            return await result.ToListAsync();
+        }
+
+        private IQueryable<T> _applySpecification(ISpecification<T> spec)
+        {
+            return SpecificationEvaluator<T>.getQuery(_entity.AsQueryable(), spec);
         }
     }
 }

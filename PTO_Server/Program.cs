@@ -9,8 +9,11 @@ using Infrastructure.Data;
 using PTO_Server.Repository;
 using PTO_Server.Repository.UserAuth;
 using Core.Interfaces;
-var builder = WebApplication.CreateBuilder(args);
+using Microsoft.Extensions.Logging;
+using Core.Specifications;
+using PTO_Server.Helpers;
 
+var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 LogManager.LoadConfiguration(String.Concat(Directory.GetCurrentDirectory(), "/nlog.config.txt"));
 builder.Services.ConfigureCors();
@@ -20,7 +23,10 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddSingleton<ILoggerManager, LoggerManager>();
 builder.Services.AddScoped<IUserAuth, UserAuth>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+//builder.Services.AddScoped(typeof(ISpecification<>), typeof(BaseSpecification<>));
 builder.Services.AddTransient<ITokenService, TokenService>();
+builder.Services.AddTransient<ProductsWithTypeAndBrandSpecification>();
+builder.Services.AddAutoMapper(typeof(MappingProfiles));
 builder.Services.AddControllers().AddJsonOptions(opt =>
 {
     opt.JsonSerializerOptions.PropertyNamingPolicy = null;
@@ -35,7 +41,23 @@ builder.Services.AddDbContext<DataContext>(options =>
 });
 
 var app = builder.Build();
-
+using(var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+    var logger = loggerFactory.CreateLogger(loggerFactory.GetType());
+    try
+    {
+        logger.LogInformation("migrations applied successfully");
+        var context = services.GetRequiredService<DbContext>();
+        await context.Database.MigrateAsync();
+    }
+    catch(Exception e)
+    {
+        
+        logger.LogError(e, "error occured during migrationn");
+    }
+}
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -46,6 +68,7 @@ app.UseStaticFiles();
 app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All });
 app.UseCors("CorsPolicy");
 app.UseRouting();
+app.UseStaticFiles(); //for wwwroot
 //app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
